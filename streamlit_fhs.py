@@ -111,12 +111,15 @@ if st.button('Predict'):
     
     predictions = model.predict(df11)
     predictions2 = np.round(predictions).astype(int)
-    if np.argmax(predictions, axis=1)==2:
-        st.write('<p class="big-font">The winner is', Fighter1, 'with a probability of', "{:.2f}".format(predictions[0][2]*100), '%</p>', unsafe_allow_html=True)
-    elif np.argmax(predictions, axis=1)==1:
-        st.write('<p class="big-font">The winner is', Fighter2, 'with a probability of',  "{:.2f}".format(predictions[0][1]*100), '%</p>', unsafe_allow_html=True)
-    elif np.argmax(predictions, axis=1)==0:
-        st.write('<p class="big-font">The fight is a draw with a probability of',  "{:.2f}".format(predictions[0][0]*100), '%</p>', unsafe_allow_html=True)
+    if Fighter1==Fighter2:
+        st.write('<p class="big-font">This is the same fighter</p>', unsafe_allow_html=True)
     else:
-        st.write('The fight is a draw')
+        if np.argmax(predictions, axis=1)==2:
+            st.write('<p class="big-font">The winner is', Fighter1, 'with a probability of', "{:.2f}".format(predictions[0][2]*100), '%</p>', unsafe_allow_html=True)
+        elif np.argmax(predictions, axis=1)==1:
+            st.write('<p class="big-font">The winner is', Fighter2, 'with a probability of',  "{:.2f}".format(predictions[0][1]*100), '%</p>', unsafe_allow_html=True)
+        elif np.argmax(predictions, axis=1)==0:
+            st.write('<p class="big-font">The fight is a draw with a probability of',  "{:.2f}".format(predictions[0][0]*100), '%</p>', unsafe_allow_html=True)
+        else:
+            st.write('The fight is a draw')
 
