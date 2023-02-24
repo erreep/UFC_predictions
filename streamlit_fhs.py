@@ -4,8 +4,41 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 
+df3=pd.read_csv('df3_101.csv')
 
-df3=pd.read_csv('df3_100.csv')
+from collections import defaultdict
+wins_dict = defaultdict(lambda: defaultdict(int))
+losses_dict = defaultdict(lambda: defaultdict(int))
+draws_dict = defaultdict(lambda: defaultdict(int))
+
+def create_dicts(df):
+    for fighter, division, result in zip(df['fighter'], df['division'], df['result']):
+        wins_dict[fighter][division] += result == 'W'
+
+
+    for fighter, division, result in zip(df3['fighter'], df['division'], df['result']):
+        losses_dict[fighter][division] += result == 'L'
+
+    for fighter, division, result in zip(df3['fighter'], df['division'], df['result']):
+        draws_dict[fighter][division] += result == 'D'
+    
+    return wins_dict, losses_dict, draws_dict
+
+
+wins_dict, losses_dict, draws_dict = create_dicts(df3)
+
+def result_division(df):
+
+    df['division_wins'] = df.apply(lambda row: wins_dict[row['fighter']][row['division']], axis=1)
+    df['division_losses'] = df.apply(lambda row: losses_dict[row['fighter']][row['division']], axis=1)
+    df['division_draws'] = df.apply(lambda row: draws_dict[row['fighter']][row['division']], axis=1)
+    df['opponent_division_wins'] = df.apply(lambda row: wins_dict[row['opponent']][row['division']], axis=1)
+    df['opponent_division_losses'] = df.apply(lambda row: losses_dict[row['opponent']][row['division']], axis=1)
+    df['opponent_division_draws'] = df.apply(lambda row: draws_dict[row['opponent']][row['division']], axis=1)
+    return df
+
+df3 = pd.get_dummies(df3, columns=['result'])
+
 df3['fighter'] = df3['fighter'].astype('category')
 df3['opponent'] = df3['opponent'].astype('category')
 df3['division'] = df3['division'].astype('category')
@@ -60,7 +93,7 @@ def get_fighter_data(fighter1, fighter2, division):
     # add division column
     df11['division'] = division
     df11['division'] = df11['division'].astype('category')
-
+    df11 = result_division(df11)
     # only keep relevant columns
     df11 = df11[X.columns]
     
