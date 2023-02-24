@@ -102,7 +102,7 @@ def get_fighter_data(fighter1, fighter2, division):
 
 
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
-model = joblib.load('classifier.pkl')
+model = joblib.load('classifier_ufc.pkl')
 
 
 if st.button('Predict'):
@@ -111,11 +111,12 @@ if st.button('Predict'):
     
     predictions = model.predict(df11)
     predictions2 = np.round(predictions).astype(int)
-    if predictions2[0][2]==1:
+    if np.argmax(predictions, axis=1)==2:
         st.write('<p class="big-font">The winner is', Fighter1, 'with a probability of', "{:.2f}".format(predictions[0][2]*100), '%</p>', unsafe_allow_html=True)
-    elif predictions2[0][1]==1:
+    elif np.argmax(predictions, axis=1)==1:
         st.write('<p class="big-font">The winner is', Fighter2, 'with a probability of',  "{:.2f}".format(predictions[0][1]*100), '%</p>', unsafe_allow_html=True)
+    elif np.argmax(predictions, axis=1)==0:
+        st.write('<p class="big-font">The fight is a draw with a probability of',  "{:.2f}".format(predictions[0][0]*100), '%</p>', unsafe_allow_html=True)
     else:
         st.write('The fight is a draw')
-
 
