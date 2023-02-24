@@ -13,12 +13,10 @@ df3['stance'] = df3['stance'].astype('category')
 df3['opponent_stance'] = df3['opponent_stance'].astype('category')
 X=df3.drop(['result_D', 'result_L', 'result_W'], axis=1)
 fighters = df3['fighter'].unique()
-opponents = df3['opponent'].unique()
 division=df3['division'].unique()
 division=np.sort(division)
 #combine the two arrays into one
-all_fighters = np.concatenate((fighters, opponents), axis=0)
-all_fighters=list(set(all_fighters))
+all_fighters=list(set(fighters))
 all_fighters=np.sort(all_fighters)
 st.write("# UFC Predictor")
 
