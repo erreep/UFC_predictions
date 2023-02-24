@@ -5,7 +5,7 @@ import numpy as np
 import xgboost as xgb
 
 
-df3=pd.read_csv('/Users/sebas/Downloads/df3_100.csv')
+df3=pd.read_csv('df3_100.csv')
 df3['fighter'] = df3['fighter'].astype('category')
 df3['opponent'] = df3['opponent'].astype('category')
 df3['division'] = df3['division'].astype('category')
@@ -71,7 +71,7 @@ def get_fighter_data(fighter1, fighter2, division):
 
 
 
-model = joblib.load('/Users/sebas/Downloads/classifier.pkl')
+model = joblib.load('classifier.pkl')
 
 
 if st.button('Predict'):
