@@ -108,8 +108,11 @@ model = joblib.load('classifier_ufc.pkl')
 if st.button('Predict'):
     
     df11=get_fighter_data(Fighter1, Fighter2, division)
-    
-    predictions = model.predict(df11)
+    df12= get_fighter_data(Fighter2, Fighter1, division)
+    predictionsnormal = model.predict(df11)
+    predictionsreverse = model.predict(df12)
+    predictions=list([((predictionsnormal[0][0]+predictionsreverse[0][0])/2),((predictionsnormal[0][1]+predictionsreverse[0][2])/2),((predictionsnormal[0][2]+predictionsreverse[0][1])/2)])
+    predictions = np.array([predictions])
     predictions2 = np.round(predictions).astype(int)
     if Fighter1==Fighter2:
         st.write('<p class="big-font">This is the same fighter</p>', unsafe_allow_html=True)
@@ -122,4 +125,3 @@ if st.button('Predict'):
             st.write('<p class="big-font">The fight is a draw with a probability of',  "{:.2f}".format(predictions[0][0]*100), '%</p>', unsafe_allow_html=True)
         else:
             st.write('The fight is a draw')
-
