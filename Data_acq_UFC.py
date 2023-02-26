@@ -271,8 +271,7 @@ def update_fighter_details(fighter_urls, saved_fighters):
     updated_fighters = updated_fighters.reset_index(drop = True)
     return updated_fighters
 
-
-    suffixes = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'}
+suffixes = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'}
 urls = []
 
 fighter_dict = {}
@@ -308,15 +307,14 @@ def flatten_list(l):
 
 flattened = flatten_dict(fighter_dict)
 fighters=get_fighter_details(flattened)
-fighters.to_csv('/Users/Downloads/fighter_own.csv', index = False)
-
-df2=pd.read_csv('/Users/Downloads/fight_hist2.csv')
-fighters=pd.read_csv('/Users/Downloads/fighter_own.csv')
-
+fighters.to_csv('fighter_own.csv', index = False)
+df2=pd.read_csv('/Users/sebas/Downloads/fight_hist2.csv')
+fighters=pd.read_csv('/Users/sebas/Downloads/fighter_own.csv')
 df2=update_fight_stats(df2)
-df2.to_csv('/Users/Downloads/fight_hist2.csv', index=False)
+df2.to_csv('fight_hist2.csv', index=False)
+df2=pd.read_csv('ight_hist2.csv')
 
-
+#
 df2['round'] = pd.to_numeric(df2['round'])
 #max round per fighter
 df2['max_round']=df2.groupby('fighter')['round'].transform(max)
@@ -348,30 +346,7 @@ df2['total_ufc_cnc']=df2.groupby('fighter')['method'].transform(lambda x: (x=='C
 df2['total_ufc_other']=df2.groupby('fighter')['method'].transform(lambda x: (x=='Other').sum())
 
 
-#clean division column
-#remove apostrophe from division column
-df2["division"] = df2["division"].str.replace("'", "")
 
-result_count = df2.groupby(['fighter', 'division', 'result']).count()
-for division in df2["division"].unique():
-        df2[f'Wins_{division}'] = 0
-        df2[f'Losses_{division}'] = 0
-        df2[f'Draws_{division}'] = 0
-for fighter in df2["fighter"].unique():
-    for division in df2["division"].unique():
-    #if fighter fighter is in result_count with division Bantamweight 
-        if (fighter, division) in result_count.index:
-            #if has wins in banweight
-            if 'W' in result_count.loc[fighter, division].index:
-                df2[f"Wins_{division}"][df2['fighter']==fighter] = result_count.loc[fighter, division, 'W'][0]
-            if 'L' in result_count.loc[fighter, division].index:
-                df2[f"Losses_{division}"][df2['fighter']==fighter] = result_count.loc[fighter, division, 'L'][0]
-            if 'D' in result_count.loc[fighter, division].index:
-                df2[f"Draws_{division}"][df2['fighter']==fighter] = result_count.loc[fighter, division, 'D'][0]          
-        else:
-            df2[f"Wins_{division}"][df2['fighter']==fighter] = 0
-            df2[f"Losses_{division}"][df2['fighter']==fighter] = 0
-            df2[f"Draws_{division}"][df2['fighter']==fighter] = 0
 
 
 def create_fighter_stats(df, col_list):
@@ -416,12 +391,37 @@ df3=df2.drop(['date', 'fight_url', 'event_url',#'division',
        'ground_strikes_attempts'], axis=1)
 
 
+from collections import defaultdict
+wins_dict = defaultdict(lambda: defaultdict(int))
+losses_dict = defaultdict(lambda: defaultdict(int))
+draws_dict = defaultdict(lambda: defaultdict(int))
 
-       #make a column stance in df3 that takes the value of stance from fighters dataset based on fighter column in df3
-df3['stance']=df3['fighter'].map(dict(zip(fighters['name'], fighters['stance'])))
-#height
-df3['height']=df3['fighter'].map(dict(zip(fighters['name'], fighters['height'])))
+def create_dicts(df):
+    for fighter, division, result in zip(df['fighter'], df['division'], df['result']):
+        wins_dict[fighter][division] += result == 'W'
 
+
+    for fighter, division, result in zip(df3['fighter'], df['division'], df['result']):
+        losses_dict[fighter][division] += result == 'L'
+
+    for fighter, division, result in zip(df3['fighter'], df['division'], df['result']):
+        draws_dict[fighter][division] += result == 'D'
+    
+    return wins_dict, losses_dict, draws_dict
+
+wins_dict, losses_dict, draws_dict = create_dicts(df3)
+
+def result_division(df):
+
+    df['division_wins'] = df.apply(lambda row: wins_dict[row['fighter']][row['division']], axis=1)
+    df['division_losses'] = df.apply(lambda row: losses_dict[row['fighter']][row['division']], axis=1)
+    df['division_draws'] = df.apply(lambda row: draws_dict[row['fighter']][row['division']], axis=1)
+    df['opponent_division_wins'] = df.apply(lambda row: wins_dict[row['opponent']][row['division']], axis=1)
+    df['opponent_division_losses'] = df.apply(lambda row: losses_dict[row['opponent']][row['division']], axis=1)
+    df['opponent_division_draws'] = df.apply(lambda row: draws_dict[row['opponent']][row['division']], axis=1)
+    return df
+
+df3 = result_division(df3)
 
 import numpy as np
 columns=list(df3.columns)
@@ -440,9 +440,6 @@ def add_opponent_columns(df, cols):
 new_cols=columns
 df3 = add_opponent_columns(df3, new_cols)
 
-df3.to_csv('/Users/Downloads/df3_99.csv', index=False)
-#df3=pd.read_csv('/Users/sebas/Downloads/df3_99.csv')
-
 def add_opponent_columns(df, cols):
     # create a new dataframe with the fighter and opponent columns
     opponent_values = df[['fighter', 'opponent']]
@@ -460,9 +457,7 @@ columns.remove('opponent')
 columns.remove('result')
 new_cols=columns
 df3 = add_opponent_columns(df3, new_cols)
-
 df3['fight_url']=df2['fight_url']
-
 
 #set seed
 np.random.seed(0)
@@ -479,14 +474,15 @@ def select_random_row(group):
     return row_to_keep
 
 # apply custom function to each group and combine the results
-df3 = df3.groupby('fight_url').apply(select_random_row).reset_index(drop=True)
-df3 = pd.get_dummies(df3, columns=['result'])
+#df3 = df3.groupby('fight_url').apply(select_random_row).reset_index(drop=True)
+#df3 = pd.get_dummies(df3, columns=['result'])
 #make categorical columns
 df3['fighter']=df3['fighter'].astype('category')
 df3['opponent']=df3['opponent'].astype('category')
 df3['stance']=df3['stance'].astype('category')
 df3['opponent_stance']=df3['opponent_stance'].astype('category')
-
+df3['reach']=df3['fighter'].map(dict(zip(fighters['name'], fighters['reach'])))
+df3['opponent_reach']=df3['opponent'].map(dict(zip(fighters['name'], fighters['reach'])))
 #change height to float
 def convert_to_cm(height_str):
     if pd.isna(height_str) or height_str == '--':
@@ -501,8 +497,8 @@ def convert_to_cm(height_str):
         
 df3['height'] = df3['height'].apply(convert_to_cm)
 df3['opponent_height'] = df3['opponent_height'].apply(convert_to_cm)
+df3['division']=df3['division'].astype('category')
 #remove fight_url column
 df3=df3.drop(['fight_url'], axis=1)
 
-#division to category
-df3['division']=df3['division'].astype('category')
+df3.to_csv('/Users/sebas/Downloads/df3_101.csv', index=False)
