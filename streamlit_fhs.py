@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 
-df3=pd.read_csv('df3_101.csv')
+df3=pd.read_csv('data/df3_101.csv')
 
 from collections import defaultdict
 wins_dict = defaultdict(lambda: defaultdict(int))
