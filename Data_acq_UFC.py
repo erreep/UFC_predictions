@@ -500,5 +500,5 @@ df3['opponent_height'] = df3['opponent_height'].apply(convert_to_cm)
 df3['division']=df3['division'].astype('category')
 #remove fight_url column
 df3=df3.drop(['fight_url'], axis=1)
-
+#change
 df3.to_csv('/Users/sebas/Downloads/df3_101.csv', index=False)
